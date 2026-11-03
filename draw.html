@@ -58,6 +58,25 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .top h1{font-family:var(--font-display);font-weight:400;font-size:26px;margin:0 8px 0 0;white-space:nowrap;letter-spacing:.01em}
 .spacer{flex:1}
 .home{color:inherit;text-decoration:none}
+.rail{
+  top:50%;transform:translateY(-50%);left:max(12px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px 6px;width:76px;
+}
+body.hand-left .rail{left:auto;right:max(12px,env(safe-area-inset-right,0px))}
+body.hand-left .layers{right:auto;left:max(12px,env(safe-area-inset-left,0px))}
+.rbtn{flex-direction:column;height:auto;min-height:58px;padding:8px 4px;gap:3px;white-space:normal}
+.rbtn svg{width:22px;height:22px}
+.rl{font-size:13px;line-height:1.15;text-align:center}
+.rsep{height:1px;background:var(--line);margin:4px 6px}
+.handsheet{width:min(420px,100%);text-align:center}
+.handsheet h2{margin:0;font-weight:400;font-size:28px}
+.hands{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+.hbtn{font:inherit;font-size:20px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 10px;border-radius:18px;border:1px solid var(--line);background:var(--paper);color:#1f1c25;cursor:pointer}
+.hbtn:active{transform:scale(.97)}
+.hbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hic{font-size:40px;line-height:1}
+#handL .hic{display:inline-block;transform:scaleX(-1)}
+@media (max-width:760px){.rail{width:58px}.rail .rl{display:none}.rbtn{min-height:44px}}
 .dock{
   bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);
   width:max-content;max-width:calc(100% - 24px);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;padding:10px 14px;
@@ -95,6 +114,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   position:fixed;z-index:8;top:calc(env(safe-area-inset-top,0px) + 76px);left:50%;transform:translateX(-50%);
   background:var(--fg);color:var(--bg);border-radius:999px;padding:6px 16px;font-size:15px;pointer-events:none;box-shadow:var(--shadow);
 }
+.erasebadge{position:fixed;z-index:7;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 76px);font:inherit;font-size:15px;border:none;border-radius:999px;padding:7px 16px;background:var(--accent);color:#fff;box-shadow:var(--shadow);cursor:pointer;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
+.erasebadge b{font-weight:600}
 .hint{
   position:fixed;z-index:5;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 132px);
   max-width:calc(100% - 32px);border-radius:12px;padding:7px 14px;font-size:15px;color:var(--muted);pointer-events:none;text-align:center;
@@ -110,6 +131,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .lname{flex:1;min-width:0;text-align:left;font:inherit;font-size:16px;background:none;border:none;color:var(--fg);padding:6px;min-height:36px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ib{font:inherit;font-size:12px;border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:10px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .ib:disabled{opacity:.3;cursor:default}
+.layers .lop{width:100%}
+.layers .lop input{width:100%}
 .lfoot{display:flex;gap:6px;flex-wrap:wrap}
 .lfoot .ibtn{flex:1;font-size:15px;height:36px}
 .overlay{
@@ -134,7 +157,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   .slider input{width:92px}
   .dock .sep{display:none}
   .hint{bottom:calc(env(safe-area-inset-bottom,0px) + 186px);font-size:14px}
-  .toast,.layers{top:calc(env(safe-area-inset-top,0px) + 124px)}
+  .toast,.layers{top:calc(env(safe-area-inset-top,0px) + 166px)}
+  .erasebadge{top:calc(env(safe-area-inset-top,0px) + 166px);font-size:14px}
 }
 @media (prefers-reduced-motion:reduce){.ibtn,.swatch{transition:none}}
 </style>
@@ -166,20 +190,33 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   <label class="slider" for="size"><span><span data-i="size">ขนาดเส้น</span> <b id="sizeV"></b></span><input id="size" type="range" min="1" max="20" step="0.5" value="3"></label>
   <label class="slider" for="amp"><span><span data-i="wobble">ความหยึกหยัก</span> <b id="ampV"></b></span><input id="amp" type="range" min="0" max="10" step="0.5" value="2.5"></label>
   <label class="slider" for="freq"><span><span data-i="freq">คลื่นถี่</span> <b id="freqV"></b></span><input id="freq" type="range" min="1" max="10" step="1" value="6"></label>
-  <div class="sep"></div>
-  <div class="group">
-    <button class="ibtn" id="eraser" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21h10"/><path d="M5.5 14.5l8-8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L12 18H8.5z"/></svg><span class="lbl" data-i="eraser">ยางลบ</span></button>
-    <button class="ibtn" id="boil" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/></svg><span class="lbl" data-i="boil">เส้นดุ๊กดิ๊ก</span></button>
-    <button class="ibtn" id="mirror" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 3"/><path d="M9 7L4 17h5z"/><path d="M15 7l5 10h-5z"/></svg><span id="mirrorL">กระจก: ปิด</span></button>
+</div>
+
+<div class="float rail" id="rail">
+    <button class="ibtn rbtn" id="brush" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg><span class="rl" data-i="brush">แปรง</span></button>
+    <button class="ibtn rbtn" id="eraser" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21h10"/><path d="M5.5 14.5l8-8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L12 18H8.5z"/></svg><span class="rl" data-i="eraser">ยางลบ</span></button>
+    <button class="ibtn rbtn" id="boil" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/></svg><span class="rl" data-i="boil">เส้นดุ๊กดิ๊ก</span></button>
+    <button class="ibtn rbtn" id="mirror" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18" stroke-dasharray="2 3"/><path d="M9 7L4 17h5z"/><path d="M15 7l5 10h-5z"/></svg><span class="rl" id="mirrorL">กระจก: ปิด</span></button>
+  <div class="rsep"></div>
+  <button class="ibtn rbtn" id="swapHand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12"/><path d="M15 3l4 4-4 4"/><path d="M17 17H5"/><path d="M9 13l-4 4 4 4"/></svg><span class="rl" data-i="swap">สลับข้าง</span></button>
+</div>
+
+<div class="overlay" id="handOv" hidden>
+  <div class="sheet handsheet">
+    <h2 data-i="handTitle">ถนัดมือไหน?</h2>
+    <p data-i="handDesc"></p>
+    <div class="hands"><button class="hbtn" id="handL"><span class="hic">✋</span><span data-i="handLeft">ถนัดซ้าย</span></button><button class="hbtn" id="handR"><span class="hic">🤚</span><span data-i="handRight">ถนัดขวา</span></button></div>
   </div>
 </div>
 
 <div class="toast" id="toast" hidden></div>
+<button class="erasebadge" id="eraseBadge" hidden><span data-i="erasing">กำลังใช้ยางลบ</span> · <b data-i="backBrush">แตะเพื่อกลับไปใช้แปรง</b></button>
 <div class="float hint" id="hint" data-i="hint" hidden>ภาพตัวอย่าง · วาดต่อได้เลย หรือแตะ “ล้างเลเยอร์” เพื่อเริ่มใหม่</div>
 
 <div class="float layers" id="layers" hidden>
   <div class="lhead"><span data-i="layers">เลเยอร์</span><button class="ibtn pill" id="addLayer" data-i="add">+ เพิ่ม</button></div>
   <div id="layerList"></div>
+  <label class="slider lop" for="lop"><span><span data-i="layerOpacity">ความทึบเลเยอร์</span> <b id="lopV">100%</b></span><input id="lop" type="range" min="0" max="100" step="1" value="100"></label>
   <div class="lfoot"><button class="ibtn pill" id="clear">ล้างเลเยอร์</button><button class="ibtn pill" id="delLayer" data-i="del">ลบเลเยอร์นี้</button></div>
 </div>
 
@@ -218,8 +255,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   let W=0,H=0,dpr=1, current=null, tick=0, boilTimer=null, penSeen=false, isSample=false, rafPending=false;
   const st={color:COLORS[0], size:3, amp:2.5, freq:6, erase:false, boil:false, mirror:0};
   const I={
-    th:{title:'เส้นขยุกขยิก',size:'ขนาดเส้น',wobble:'ความหยึกหยัก',freq:'คลื่นถี่',off:'ปิด',eraser:'ยางลบ',boil:'เส้นดุ๊กดิ๊ก',mirror:'กระจก',mirrors:['ปิด','ซ้าย-ขวา','บน-ล่าง','4 ทาง'],zoomTip:'แตะเพื่อกลับไป 100%',undo:'ย้อนกลับ',redo:'ทำซ้ำ',layers:'เลเยอร์',layer:'เลเยอร์',clear:'ล้างเลเยอร์',tapClear:'แตะอีกครั้งเพื่อล้าง',save:'บันทึกรูป',unlock:'ปลดล็อก 29฿',unlockTitle:'ปลดล็อกเวอร์ชันเต็ม',unlockDesc:'จ่ายครั้งเดียว 29 บาท ได้ลบลายน้ำ “แมวดำยุกยิก” และใช้ได้ถึง 10 เลเยอร์ (ฟรีใช้ได้ 2 เลเยอร์) กรอกโค้ดที่ได้จากการซื้อเพื่อปลดล็อกในเครื่องนี้',addLock:'+ เพิ่ม (29฿)',layerLimit:'เวอร์ชันฟรีใช้ได้ 2 เลเยอร์ ปลดล็อกเพื่อใช้ได้ถึง 10 เลเยอร์',confirm:'ยืนยัน',badCode:'โค้ดไม่ถูกต้อง ลองเช็กตัวอักษรอีกครั้ง',unlocked:'ปลดล็อกแล้ว ขอบคุณที่สนับสนุนนะ',buy:'ยังไม่มีโค้ด? ซื้อได้ในราคา <b>29 บาท</b> ทักที่เพจ <a href="https://www.facebook.com/share/19oWpEZDAw/" target="_blank" rel="noopener">แมวดำตัวอ้วน</a>',wm:'แมวดำยุกยิก',gif:'บันทึก GIF',making:'กำลังทำ GIF…',hint:'ภาพตัวอย่าง · วาดต่อได้เลย หรือแตะ “ล้างเลเยอร์” เพื่อเริ่มใหม่',add:'+ เพิ่ม',del:'ลบเลเยอร์นี้',tapDel:'แตะอีกครั้งเพื่อลบ',hiddenS:' (ซ่อน)',hide:'ซ่อน',show:'แสดง',up:'เลื่อนขึ้น',down:'เลื่อนลง',hiddenToast:'เลเยอร์นี้ซ่อนอยู่',saveHelp:'กดค้างที่รูป แล้วเลือก <b>บันทึกลงในรูปภาพ</b> (Save to Photos)',close:'ปิด',imgAlt:'รูปที่วาด',color:'สี',custom:'เลือกสีเอง',colors:'สีเส้น'},
-    en:{title:'Wobbly Lines',size:'Size',wobble:'Wobble',freq:'Waves',off:'Off',eraser:'Eraser',boil:'Boil',mirror:'Mirror',mirrors:['Off','Left–Right','Top–Bottom','4-way'],zoomTip:'Tap to reset to 100%',undo:'Undo',redo:'Redo',layers:'Layers',layer:'Layer',clear:'Clear layer',tapClear:'Tap again to clear',save:'Save image',unlock:'Unlock ฿29',unlockTitle:'Unlock the full version',unlockDesc:'Pay ฿29 once to remove the “แมวดำยุกยิก” watermark and use up to 10 layers (free version has 2). Enter the code you bought to unlock this device.',addLock:'+ Add (฿29)',layerLimit:'The free version has 2 layers. Unlock to use up to 10.',confirm:'Confirm',badCode:'That code doesn’t match. Check the letters and try again.',unlocked:'Unlocked. Thanks for your support!',buy:'No code yet? Get one for <b>฿29</b> — message the <a href="https://www.facebook.com/share/19oWpEZDAw/" target="_blank" rel="noopener">แมวดำตัวอ้วน</a> page',wm:'แมวดำยุกยิก',gif:'Save GIF',making:'Making GIF…',hint:'Example drawing · Keep drawing, or tap “Clear layer” to start over',add:'+ Add',del:'Delete layer',tapDel:'Tap again to delete',hiddenS:' (hidden)',hide:'Hide',show:'Show',up:'Move up',down:'Move down',hiddenToast:'This layer is hidden',saveHelp:'Press and hold the image, then choose <b>Save to Photos</b>',close:'Close',imgAlt:'Your drawing',color:'Color',custom:'Pick a color',colors:'Line colors'},
+    th:{title:'เส้นขยุกขยิก',size:'ขนาดเส้น',wobble:'ความหยึกหยัก',freq:'คลื่นถี่',off:'ปิด',eraser:'ยางลบ',boil:'เส้นดุ๊กดิ๊ก',mirror:'กระจก',mirrors:['ปิด','ซ้าย-ขวา','บน-ล่าง','4 ทาง'],zoomTip:'แตะเพื่อกลับไป 100%',undo:'ย้อนกลับ',redo:'ทำซ้ำ',layers:'เลเยอร์',layer:'เลเยอร์',clear:'ล้างเลเยอร์',tapClear:'แตะอีกครั้งเพื่อล้าง',save:'บันทึกรูป',brush:'แปรง',erasing:'กำลังใช้ยางลบ',backBrush:'แตะเพื่อกลับไปใช้แปรง',swap:'สลับข้าง',handTitle:'ถนัดมือไหน?',handDesc:'แถบเครื่องมือจะไปอยู่ฝั่งตรงข้ามกับมือที่วาด มือจะได้ไม่บังปุ่ม เปลี่ยนได้ทีหลังที่ปุ่ม “สลับข้าง”',handLeft:'ถนัดซ้าย',handRight:'ถนัดขวา',layerOpacity:'ความทึบเลเยอร์',unlock:'ปลดล็อก 29฿',unlockTitle:'ปลดล็อกเวอร์ชันเต็ม',unlockDesc:'จ่ายครั้งเดียว 29 บาท ได้ลบลายน้ำ “แมวดำยุกยิก” และใช้ได้ถึง 10 เลเยอร์ (ฟรีใช้ได้ 2 เลเยอร์) กรอกโค้ดที่ได้จากการซื้อเพื่อปลดล็อกในเครื่องนี้',addLock:'+ เพิ่ม (29฿)',layerLimit:'เวอร์ชันฟรีใช้ได้ 2 เลเยอร์ ปลดล็อกเพื่อใช้ได้ถึง 10 เลเยอร์',confirm:'ยืนยัน',badCode:'โค้ดไม่ถูกต้อง ลองเช็กตัวอักษรอีกครั้ง',unlocked:'ปลดล็อกแล้ว ขอบคุณที่สนับสนุนนะ',buy:'ยังไม่มีโค้ด? ซื้อได้ในราคา <b>29 บาท</b> ทักที่เพจ <a href="https://www.facebook.com/share/19oWpEZDAw/" target="_blank" rel="noopener">แมวดำตัวอ้วน</a>',wm:'แมวดำยุกยิก',gif:'บันทึก GIF',making:'กำลังทำ GIF…',hint:'ภาพตัวอย่าง · วาดต่อได้เลย หรือแตะ “ล้างเลเยอร์” เพื่อเริ่มใหม่',add:'+ เพิ่ม',del:'ลบเลเยอร์นี้',tapDel:'แตะอีกครั้งเพื่อลบ',hiddenS:' (ซ่อน)',hide:'ซ่อน',show:'แสดง',up:'เลื่อนขึ้น',down:'เลื่อนลง',hiddenToast:'เลเยอร์นี้ซ่อนอยู่',saveHelp:'กดค้างที่รูป แล้วเลือก <b>บันทึกลงในรูปภาพ</b> (Save to Photos)',close:'ปิด',imgAlt:'รูปที่วาด',color:'สี',custom:'เลือกสีเอง',colors:'สีเส้น'},
+    en:{title:'Wobbly Lines',size:'Size',wobble:'Wobble',freq:'Waves',off:'Off',eraser:'Eraser',boil:'Boil',mirror:'Mirror',mirrors:['Off','Left–Right','Top–Bottom','4-way'],zoomTip:'Tap to reset to 100%',undo:'Undo',redo:'Redo',layers:'Layers',layer:'Layer',clear:'Clear layer',tapClear:'Tap again to clear',save:'Save image',brush:'Brush',erasing:'Eraser on',backBrush:'tap to go back to the brush',swap:'Swap side',handTitle:'Which hand do you draw with?',handDesc:'The tool bar goes on the other side so your hand won’t cover it. Change it any time with “Swap side”.',handLeft:'Left hand',handRight:'Right hand',layerOpacity:'Layer opacity',unlock:'Unlock ฿29',unlockTitle:'Unlock the full version',unlockDesc:'Pay ฿29 once to remove the “แมวดำยุกยิก” watermark and use up to 10 layers (free version has 2). Enter the code you bought to unlock this device.',addLock:'+ Add (฿29)',layerLimit:'The free version has 2 layers. Unlock to use up to 10.',confirm:'Confirm',badCode:'That code doesn’t match. Check the letters and try again.',unlocked:'Unlocked. Thanks for your support!',buy:'No code yet? Get one for <b>฿29</b> — message the <a href="https://www.facebook.com/share/19oWpEZDAw/" target="_blank" rel="noopener">แมวดำตัวอ้วน</a> page',wm:'แมวดำยุกยิก',gif:'Save GIF',making:'Making GIF…',hint:'Example drawing · Keep drawing, or tap “Clear layer” to start over',add:'+ Add',del:'Delete layer',tapDel:'Tap again to delete',hiddenS:' (hidden)',hide:'Hide',show:'Show',up:'Move up',down:'Move down',hiddenToast:'This layer is hidden',saveHelp:'Press and hold the image, then choose <b>Save to Photos</b>',close:'Close',imgAlt:'Your drawing',color:'Color',custom:'Pick a color',colors:'Line colors'},
     ja:{title:'ゆらゆら線',size:'太さ',wobble:'ゆらぎ',freq:'波の細かさ',off:'オフ',eraser:'消しゴム',boil:'ぷるぷる線',mirror:'ミラー',mirrors:['オフ','左右','上下','4方向'],zoomTip:'タップで100%に戻す',undo:'取り消し',redo:'やり直し',layers:'レイヤー',layer:'レイヤー',clear:'レイヤーを消去',tapClear:'もう一度タップで消去',save:'画像を保存',hint:'サンプル画像 · そのまま描くか「レイヤーを消去」で最初から',add:'+ 追加',del:'このレイヤーを削除',tapDel:'もう一度タップで削除',hiddenS:'（非表示）',hide:'隠す',show:'表示',up:'上へ',down:'下へ',hiddenToast:'このレイヤーは非表示です',saveHelp:'画像を長押しして<b>「写真に保存」</b>を選んでください',close:'閉じる',imgAlt:'描いた絵',color:'色',custom:'色を選ぶ',colors:'線の色'},
     zh:{title:'抖抖线',size:'粗细',wobble:'抖动',freq:'波纹密度',off:'关',eraser:'橡皮擦',boil:'动态线',mirror:'镜像',mirrors:['关','左右','上下','四向'],zoomTip:'点按恢复 100%',undo:'撤销',redo:'重做',layers:'图层',layer:'图层',clear:'清空图层',tapClear:'再点一次清空',save:'保存图片',hint:'示例图 · 可以接着画，或点“清空图层”重新开始',add:'+ 添加',del:'删除此图层',tapDel:'再点一次删除',hiddenS:'（隐藏）',hide:'隐藏',show:'显示',up:'上移',down:'下移',hiddenToast:'此图层已隐藏',saveHelp:'长按图片，然后选择<b>“存储到照片”</b>',close:'关闭',imgAlt:'我的画',color:'颜色',custom:'自选颜色',colors:'线条颜色'}
   };
@@ -240,7 +277,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   const pk=document.createElement('input');pk.type='color';pk.className='picker';pk.id='picker';pk.value='#4b4b4b';pk.setAttribute('aria-label',t('custom'));
   pk.oninput=()=>pickColor(pk.value,true);sw.appendChild(pk);
   function pickColor(c,custom){
-    st.color=c; st.erase=false; $('eraser').setAttribute('aria-pressed','false');
+    st.color=c; setTool(false);
     sw.querySelectorAll('.swatch').forEach(b=>b.setAttribute('aria-pressed',!custom&&b.style.background&&rgb(b.style.background)===c.toLowerCase()));
   }
   function rgb(s){const m=s.match(/\d+/g);return m?'#'+m.slice(0,3).map(n=>(+n).toString(16).padStart(2,'0')).join(''):s}
@@ -248,11 +285,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   bindSlider('size','size',v=>v+' px');
   bindSlider('amp','amp',v=>v===0?t('off'):v);
   bindSlider('freq','freq',v=>v);
-  $('eraser').onclick=e=>{st.erase=!st.erase;e.currentTarget.setAttribute('aria-pressed',st.erase)};
+  function setTool(erase){st.erase=erase;$('eraser').setAttribute('aria-pressed',erase);$('brush').setAttribute('aria-pressed',!erase);$('eraseBadge').hidden=!erase;cv.style.cursor=erase?'cell':'crosshair'}
+  $('eraser').onclick=()=>setTool(true);
+  $('brush').onclick=()=>setTool(false);
+  $('eraseBadge').onclick=()=>setTool(false);
   $('boil').onclick=e=>{st.boil=!st.boil;e.currentTarget.setAttribute('aria-pressed',st.boil);setBoil()};
   $('mirror').onclick=e=>{
     st.mirror=(st.mirror+1)%4;const b=e.currentTarget;
-    $('mirrorL').textContent=mirrorLabel();b.setAttribute('aria-pressed',st.mirror>0);
+    $('mirrorL').textContent=t('mirrors')[st.mirror];b.setAttribute('aria-label',mirrorLabel());b.setAttribute('aria-pressed',st.mirror>0);
     $('guideV').hidden=!(st.mirror===1||st.mirror===3);$('guideH').hidden=!(st.mirror===2||st.mirror===3);
   };
   let redoStack=[];
@@ -271,6 +311,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   function commitLayers(){renderLayers();persist();draw()}
   function renderLayers(){
     $('layerL').textContent=t('layers')+' '+layers.length+'/'+maxL();
+    if(layers[active]){const op=Math.round((layers[active].opacity??1)*100);$('lop').value=op;$('lopV').textContent=op+'%';}
     $('addLayer').disabled=layers.length>=MAXL;$('addLayer').textContent=(!unlocked&&layers.length>=FREE_L)?t('addLock'):t('add');$('delLayer').disabled=layers.length<=1;
     const list=$('layerList');list.innerHTML='';
     for(let i=layers.length-1;i>=0;i--){
@@ -287,6 +328,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       row.append(eye,nm,up,dn);list.appendChild(row);
     }
   }
+  $('lop').oninput=e=>{const v=+e.target.value;if(!layers[active])return;layers[active].opacity=v/100;$('lopV').textContent=v+'%';requestDraw()};
+  $('lop').onchange=()=>persist();
   $('addLayer').onclick=()=>{if(!unlocked&&layers.length>=FREE_L){openCode(t('layerLimit'));return}if(layers.length>=MAXL)return;layers.splice(active+1,0,newLayer());active++;commitLayers()};
   let delArmed=null;
   $('delLayer').onclick=e=>{
@@ -339,7 +382,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       if(!L.visible)continue;
       ctx=tmp.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);ctx.setTransform(sc,0,0,sc,-ox*sc,-oy*sc);
       for(const s of L.strokes)renderStroke(s,k==null?0:(k+s.seed)%3);
-      o.drawImage(tmp,0,0);
+      o.globalAlpha=L.opacity??1;o.drawImage(tmp,0,0);o.globalAlpha=1;
     }
     ctx=mainCtx;if(!unlocked)watermark(o,w,h);return out;
   }
@@ -422,6 +465,13 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
   };
   $('codeIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('codeOk').click()});
   updUnlock();
+  // ---- handedness: tools sit opposite the drawing hand ----
+  function setHand(h){document.body.classList.toggle('hand-left',h==='left');try{localStorage.setItem('wobble-hand',h)}catch(_){}}
+  let hand=null;try{hand=localStorage.getItem('wobble-hand')}catch(_){}
+  if(hand==='left'||hand==='right')setHand(hand);else $('handOv').hidden=false;
+  $('handL').onclick=()=>{setHand('left');$('handOv').hidden=true};
+  $('handR').onclick=()=>{setHand('right');$('handOv').hidden=true};
+  $('swapHand').onclick=()=>setHand(document.body.classList.contains('hand-left')?'right':'left');
   $('closeOv').onclick=()=>{$('overlay').hidden=true};
   $('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')$('overlay').hidden=true});
 
@@ -481,7 +531,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       ctx.setTransform(dpr*view.s,0,0,dpr*view.s,dpr*view.tx,dpr*view.ty);
       for(const s of L.strokes)renderStroke(s,st.boil?(tick+s.seed)%3:0);
       if(current&&current.lid===L.id)renderStroke(current,st.boil?(tick+current.seed)%3:0);
-      mainCtx.drawImage(c,0,0);
+      mainCtx.globalAlpha=L.opacity??1;mainCtx.drawImage(c,0,0);mainCtx.globalAlpha=1;
     }
     ctx=mainCtx;
   }
@@ -598,7 +648,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
     document.querySelectorAll('[data-i]').forEach(el=>{el.textContent=t(el.dataset.i)});
     document.querySelectorAll('[data-ih]').forEach(el=>{el.innerHTML=t(el.dataset.ih)});
     $('zoom').title=t('zoomTip');$('outImg').alt=t('imgAlt');$('swatches').setAttribute('aria-label',t('colors'));
-    $('mirrorL').textContent=mirrorLabel();sliderUps.forEach(f=>f());resetClear();
+    $('mirrorL').textContent=t('mirrors')[st.mirror];$('mirror').setAttribute('aria-label',mirrorLabel());sliderUps.forEach(f=>f());resetClear();
     clearTimeout(delArmed);delArmed=null;$('delLayer').textContent=t('del');
     renderLayers();
   }
